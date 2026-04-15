@@ -1,0 +1,10 @@
+{
+  "name": "controlando-mi-diabetes-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "validate:app": "cd app && flutter analyze --no-fatal-infos . && flutter test test",
+    "validate:api": "npm --prefix api run build && npm --prefix api test -- --passWithNoTests",
+    "validate:all": "npm run validate:app && npm run validate:api"
+  }
+}

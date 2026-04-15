@@ -1,0 +1,41 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.iconset
+*.ipa
+*.apk
+*.ap_
+*.aab
+
+# Flutter Android
+android/**/*.imap
+android/**/*.jks
+android/**/*.keystore
+android/**/*.properties
+android/local.properties
+
+# Flutter iOS
+ios/.generated/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
