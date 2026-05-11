@@ -11,6 +11,8 @@ class NutritionService with ChangeNotifier {
   AuthService _authService;
   List<NutritionLog> _logs = [];
 
+  bool _isLoading = false;
+
   NutritionService(this._authService);
 
   void updateAuth(AuthService authService) {
@@ -18,8 +20,11 @@ class NutritionService with ChangeNotifier {
   }
 
   List<NutritionLog> get logs => _logs;
+  bool get isLoading => _isLoading;
 
   Future<void> fetchLogs() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await ApiClient(_authService).get(
         Uri.parse('$_baseUrl/nutrition'),
@@ -29,10 +34,12 @@ class NutritionService with ChangeNotifier {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _logs = data.map((json) => NutritionLog.fromJson(json)).toList();
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching nutrition logs: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

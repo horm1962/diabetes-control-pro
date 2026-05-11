@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -10,6 +11,7 @@ import 'app_config.dart';
 
 class AuthService with ChangeNotifier {
   static String get _baseUrl => AppConfig.baseUrl;
+  static const _secureStorage = FlutterSecureStorage();
   String? _token;
   User? _user;
   UserProfile? _profile;
@@ -29,20 +31,20 @@ class AuthService with ChangeNotifier {
   }
 
   Future<void> _loadStoredToken() async {
+    _token = await _secureStorage.read(key: 'access_token');
+
     final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('access_token');
     final userJson = prefs.getString('user_data');
     final profileJson = prefs.getString('user_profile');
-    
+
     if (userJson != null) {
       _user = User.fromJson(json.decode(userJson));
     }
-    
+
     if (profileJson != null) {
       _profile = UserProfile.fromJson(json.decode(profileJson));
     }
 
-    // Si el token cargado es "null" literal o está vacío, tratar como no autenticado
     if (_token == 'null' || (_token?.isEmpty ?? true)) {
       _token = null;
     }
@@ -113,8 +115,8 @@ class AuthService with ChangeNotifier {
         _token = data['access_token'];
         _user = User.fromJson(data['user']);
 
+        await _secureStorage.write(key: 'access_token', value: _token!);
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', _token!);
         await prefs.setString('user_data', json.encode(data['user']));
         _isNewRegistration = false;
         
@@ -150,8 +152,8 @@ class AuthService with ChangeNotifier {
         _token = data['access_token'];
         _user = User.fromJson(data['user']);
 
+        await _secureStorage.write(key: 'access_token', value: _token!);
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', _token!);
         await prefs.setString('user_data', json.encode(data['user']));
         _isNewRegistration = true;
         _profile = null;
@@ -178,11 +180,11 @@ class AuthService with ChangeNotifier {
   Future<void> logout() async {
     _token = null;
     _user = null;
+    _profile = null;
+    await _secureStorage.delete(key: 'access_token');
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
     await prefs.remove('user_data');
     await prefs.remove('user_profile');
-    _profile = null;
     notifyListeners();
   }
 

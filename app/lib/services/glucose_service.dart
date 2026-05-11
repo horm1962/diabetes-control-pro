@@ -12,6 +12,8 @@ class GlucoseService with ChangeNotifier {
   List<GlucoseLog> _logs = [];
   GlucoseLog? _latestLog;
 
+  bool _isLoading = false;
+
   GlucoseService(this._authService);
 
   void updateAuth(AuthService authService) {
@@ -20,6 +22,7 @@ class GlucoseService with ChangeNotifier {
 
   List<GlucoseLog> get logs => _logs;
   GlucoseLog? get latestLog => _latestLog;
+  bool get isLoading => _isLoading;
 
   bool get hasDataToday {
     if (_logs.isEmpty) return false;
@@ -30,14 +33,23 @@ class GlucoseService with ChangeNotifier {
         log.timestamp.day == now.day);
   }
 
-  Map<String, dynamic> calculateTIR(double low, double high) {
-    if (_logs.isEmpty) return {'in_range': 0.0, 'high': 0.0, 'low': 0.0, 'total_logs': 0, 'low_episodes': 0, 'high_episodes': 0};
+  List<GlucoseLog> get _todayLogs {
+    final now = DateTime.now();
+    return _logs.where((log) =>
+        log.timestamp.year == now.year &&
+        log.timestamp.month == now.month &&
+        log.timestamp.day == now.day).toList();
+  }
+
+  Map<String, dynamic> calculateTIR(double low, double high, {bool todayOnly = false}) {
+    final source = todayOnly ? _todayLogs : _logs;
+    if (source.isEmpty) return {'in_range': 0.0, 'high': 0.0, 'low': 0.0, 'total_logs': 0, 'low_episodes': 0, 'high_episodes': 0};
 
     int inRangeCount = 0;
     int highCount = 0;
     int lowCount = 0;
 
-    for (var log in _logs) {
+    for (var log in source) {
       if (log.value < low) {
         lowCount++;
       } else if (log.value > high) {
@@ -47,7 +59,7 @@ class GlucoseService with ChangeNotifier {
       }
     }
 
-    int total = _logs.length;
+    int total = source.length;
     return {
       'in_range': (inRangeCount / total) * 100,
       'high': (highCount / total) * 100,
@@ -59,22 +71,30 @@ class GlucoseService with ChangeNotifier {
   }
 
   String getInsight(double low, double high) {
-    final tir = calculateTIR(low, high);
-    if (tir['total_logs'] == 0) return 'Comienza a registrar para ver insights.';
-    
-    if (tir['low_episodes'] > 2) {
-      return 'Hoy hubo ${tir['low_episodes']} episodios de baja; revisa tu comida o actividad.';
+    final todayTIR = calculateTIR(low, high, todayOnly: true);
+    final allTIR = calculateTIR(low, high);
+
+    if (allTIR['total_logs'] == 0) return 'Comienza a registrar para ver insights.';
+
+    if (todayTIR['total_logs'] == 0) {
+      return 'Aún no tienes registros de hoy. ¡Recuerda medir tu glucosa!';
     }
-    if (tir['high_episodes'] > 3) {
-      return 'Niveles altos detectados (${tir['high_episodes']} veces). Considera ajustar tu hidratación o medicación.';
+
+    if ((todayTIR['low_episodes'] as int) > 2) {
+      return 'Hoy hubo ${todayTIR['low_episodes']} episodios de baja; revisa tu comida o actividad.';
     }
-    if (tir['in_range'] > 70) {
-      return '¡Excelente! Estás en nivel ideal el ${tir['in_range'].toStringAsFixed(0)}% del tiempo.';
+    if ((todayTIR['high_episodes'] as int) > 3) {
+      return 'Niveles altos detectados hoy (${todayTIR['high_episodes']} veces). Considera ajustar tu hidratación o medicación.';
+    }
+    if ((allTIR['in_range'] as double) > 70) {
+      return '¡Excelente! Estás en nivel ideal el ${allTIR['in_range'].toStringAsFixed(0)}% del tiempo.';
     }
     return 'Mantén la constancia en tus registros para mejorar el control.';
   }
 
   Future<void> fetchLogs() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await ApiClient(_authService).get(
         Uri.parse('$_baseUrl/glucose'),
@@ -87,10 +107,12 @@ class GlucoseService with ChangeNotifier {
         if (_logs.isNotEmpty) {
           _latestLog = _logs.first;
         }
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching logs: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

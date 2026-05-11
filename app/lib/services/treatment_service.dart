@@ -10,6 +10,8 @@ class TreatmentService with ChangeNotifier {
   AuthService _authService;
   List<dynamic> _logs = [];
 
+  bool _isLoading = false;
+
   TreatmentService(this._authService);
 
   void updateAuth(AuthService authService) {
@@ -17,7 +19,8 @@ class TreatmentService with ChangeNotifier {
   }
 
   List<dynamic> get logs => _logs;
-  
+  bool get isLoading => _isLoading;
+
   bool get hasDataToday {
     if (_logs.isEmpty) return false;
     final now = DateTime.now();
@@ -29,6 +32,8 @@ class TreatmentService with ChangeNotifier {
   }
 
   Future<void> fetchLogs() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await ApiClient(_authService).get(
         Uri.parse('$_baseUrl/treatment'),
@@ -37,10 +42,12 @@ class TreatmentService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         _logs = json.decode(response.body);
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching treatment logs: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

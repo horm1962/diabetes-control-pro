@@ -14,6 +14,7 @@ import 'emergency_screen.dart';
 import 'education_screen.dart';
 import '../models/user_profile.dart';
 import '../services/glucose_service.dart';
+import '../services/diabetes_guidelines.dart';
 import '../widgets/patient_app_bar_title.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -353,8 +354,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final profile = auth.profile;
         if (profile == null) return const SizedBox();
 
-        final ranges = profile.targetRanges;
-        final tips = profile.dailyTips;
+        final ranges = DiabetesGuidelines.targetRanges(profile.diabetesType);
+        final tips = DiabetesGuidelines.dailyTips(profile.diabetesType);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

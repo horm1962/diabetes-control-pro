@@ -11,6 +11,8 @@ class ActivityService with ChangeNotifier {
   AuthService _authService;
   List<ActivityLog> _logs = [];
 
+  bool _isLoading = false;
+
   ActivityService(this._authService);
 
   void updateAuth(AuthService authService) {
@@ -18,8 +20,11 @@ class ActivityService with ChangeNotifier {
   }
 
   List<ActivityLog> get logs => _logs;
+  bool get isLoading => _isLoading;
 
   Future<void> fetchLogs() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await ApiClient(_authService).get(
         Uri.parse('$_baseUrl/activity'),
@@ -29,10 +34,12 @@ class ActivityService with ChangeNotifier {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _logs = data.map((json) => ActivityLog.fromJson(json)).toList();
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching activity logs: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

@@ -27,7 +27,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _allergiesController = TextEditingController();
   final _doctorEmailController = TextEditingController();
   DiabetesType _selectedType = DiabetesType.type1;
-  TherapyType _selectedTherapy = TherapyType.diet_only;
+  TherapyType _selectedTherapy = TherapyType.dietOnly;
   DateTime _birthDate = DateTime(1990, 1, 1);
   bool _isLoading = false;
   Map<String, dynamic>? _foundDoctor;
@@ -134,7 +134,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               DropdownButtonFormField<TherapyType>(
                 value: _selectedTherapy,
                 items: [
-                  DropdownMenuItem(value: TherapyType.diet_only, child: Text('Solo Dieta')),
+                  DropdownMenuItem(value: TherapyType.dietOnly, child: Text('Solo Dieta')),
                   DropdownMenuItem(value: TherapyType.oral, child: Text('Fármacos Orales')),
                   DropdownMenuItem(value: TherapyType.insulin, child: Text('Insulina')),
                   DropdownMenuItem(value: TherapyType.combined, child: Text('Combinado')),

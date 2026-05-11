@@ -346,6 +346,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
         return 'Fármacos Orales';
       case 'combined':
         return 'Terapia Combinada';
+      case 'dietOnly':
       case 'diet_only':
         return 'Solo Dieta';
       default:

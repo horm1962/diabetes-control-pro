@@ -10,6 +10,8 @@ class AppointmentsService with ChangeNotifier {
   AuthService _authService;
   List<dynamic> _appointments = [];
 
+  bool _isLoading = false;
+
   AppointmentsService(this._authService);
 
   void updateAuth(AuthService authService) {
@@ -17,8 +19,11 @@ class AppointmentsService with ChangeNotifier {
   }
 
   List<dynamic> get appointments => _appointments;
+  bool get isLoading => _isLoading;
 
   Future<void> fetchAppointments() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await ApiClient(_authService).get(
         Uri.parse('$_baseUrl/appointments'),
@@ -27,10 +32,12 @@ class AppointmentsService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         _appointments = json.decode(response.body);
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching appointments: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
