@@ -1,4 +1,4 @@
-package com.example.controlando_mi_diabetes
+package ec.com.cmv.controlandomidiabetes
 
 import io.flutter.embedding.android.FlutterActivity
 
